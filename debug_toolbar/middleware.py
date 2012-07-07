@@ -139,7 +139,7 @@ class DebugToolbarMiddleware(object):
                 smart_unicode(toolbar.render_toolbar() + self.tag))
             if response.get('Content-Length', None):
                 response['Content-Length'] = len(response.content)
-        else:
+        elif not request.path.startswith(settings.MEDIA_URL):
             for panel in toolbar.panels:
                 panel.process_response(request, response)
             self.log_to_file(request, response, toolbar.render_toolbar())
