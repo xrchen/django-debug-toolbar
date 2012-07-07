@@ -139,5 +139,21 @@ class DebugToolbarMiddleware(object):
                 smart_unicode(toolbar.render_toolbar() + self.tag))
             if response.get('Content-Length', None):
                 response['Content-Length'] = len(response.content)
+        else:
+            for panel in toolbar.panels:
+                panel.process_response(request, response)
+            self.log_to_file(request, response, toolbar.render_toolbar())
         del self.__class__.debug_toolbars[ident]
         return response
+
+    def log_to_file(self, request, response, toolbar_content):
+        import datetime
+        import os
+        time = datetime.datetime.now().time()
+        log_dir = getattr(settings, 'DEBUG_TOOLBAR_LOG_DIR', '/tmp')
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+        filename = '%s-%s.html' % (time.strftime('%H%M%S'),
+                                   request.path.replace('/', '-').strip('-'))
+        with open(os.path.join(log_dir, filename), 'w') as f:
+            f.write('<html><body>%s</body></html>' % toolbar_content.encode('utf8'))
